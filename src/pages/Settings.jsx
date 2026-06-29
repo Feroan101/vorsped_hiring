@@ -32,6 +32,16 @@ export default function Settings() {
   const [showRegenModal, setShowRegenModal] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
 
+  const [copiedCode, setCopiedCode] = useState(null);
+
+  const handleCopyLink = (code) => {
+    const link = `${window.location.origin}/login?code=${code}`;
+    navigator.clipboard.writeText(link).then(() => {
+      setCopiedCode(code);
+      setTimeout(() => setCopiedCode(null), 2000);
+    });
+  };
+
   useEffect(() => {
     if (isAuthenticated) {
       loadData();
@@ -335,7 +345,43 @@ export default function Settings() {
                 return (
                   <tr key={c.id} className={c.status === 'used' ? 'settings__row--used' : ''}>
                     <td>{c.id}</td>
-                    <td className="settings__code">{c.code}</td>
+                    <td className="settings__code">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>{c.code}</span>
+                        {c.status === 'available' && (
+                          <button
+                            onClick={() => handleCopyLink(c.code)}
+                            title="Copy Invite Link"
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              color: copiedCode === c.code ? 'var(--green)' : 'var(--gray-400)',
+                              padding: '4px',
+                              borderRadius: '4px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              transition: 'all 0.2s',
+                            }}
+                          >
+                            {copiedCode === c.code ? (
+                              <span style={{ fontSize: '11px', color: 'var(--green)', display: 'inline-flex', alignItems: 'center', gap: '2px', fontWeight: 'normal' }}>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                  <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                Copied!
+                              </span>
+                            ) : (
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                              </svg>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </td>
                     <td>
                       {stream && (
                         <span style={{

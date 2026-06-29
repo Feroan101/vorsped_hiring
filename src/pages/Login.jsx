@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { validateCredential, markCredentialUsed } from '../data/credentials';
 import { saveSession, clearSession } from '../utils/storage';
@@ -14,6 +14,27 @@ export default function Login() {
   const [error, setError] = useState('');
   const [isValidating, setIsValidating] = useState(false);
   const [selectedStream, setSelectedStream] = useState(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const codeParam = params.get('code');
+    if (codeParam) {
+      const upperCode = codeParam.trim().toUpperCase();
+      setCredentialCode(upperCode);
+      setIsValidating(true);
+      setTimeout(() => {
+        const result = validateCredential(upperCode);
+        if (result.valid) {
+          const stream = STREAMS[result.credential.streamId];
+          setSelectedStream(stream);
+          setStep('name');
+        } else {
+          setError(result.message);
+        }
+        setIsValidating(false);
+      }, 500);
+    }
+  }, []);
 
   const handleCredentialSubmit = (e) => {
     e.preventDefault();

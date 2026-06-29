@@ -80,7 +80,33 @@ export function getCredentials() {
 export function validateCredential(code) {
   const credentials = getCredentials();
   const cleanCode = code.trim().toUpperCase();
-  const credential = credentials.find(c => c.code.toUpperCase() === cleanCode);
+  let credential = credentials.find(c => c.code.toUpperCase() === cleanCode);
+
+  if (!credential) {
+    // Attempt dynamic code registration for a validly formatted code: PREFIX-XXXX-XXXX
+    const parts = cleanCode.split('-');
+    if (parts.length === 3) {
+      const [prefix, part1, part2] = parts;
+      const stream = Object.values(STREAMS).find(s => s.prefix === prefix);
+      const isAlphanumeric4 = (str) => /^[A-Z0-9]{4}$/.test(str);
+      
+      if (stream && isAlphanumeric4(part1) && isAlphanumeric4(part2)) {
+        const newCredential = {
+          id: credentials.length > 0 ? Math.max(...credentials.map(c => c.id)) + 1 : 1,
+          code: cleanCode,
+          streamId: stream.id,
+          status: 'available',
+          usedBy: null,
+          usedAt: null,
+          scoreObtained: null,
+          scoreTotal: null,
+        };
+        credentials.push(newCredential);
+        localStorage.setItem(CREDENTIALS_KEY, JSON.stringify(credentials));
+        credential = newCredential;
+      }
+    }
+  }
 
   if (!credential) {
     return { valid: false, message: 'Invalid credential code.' };
